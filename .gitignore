@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.spec
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# App data
+history.json
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# HuggingFace cache (models are downloaded on first run)
+*.bin
+*.pt
