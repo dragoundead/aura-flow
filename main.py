@@ -1,35 +1,60 @@
 import sys
 import os
-import math
-import random
-import threading
-import winreg
-import time
-from post_formatter import format_post
+import traceback
+
+def show_error(err):
+    """Show error in crash_log.txt and a Windows Message Box."""
+    try:
+        log_path = "crash_log.txt"
+        if getattr(sys, 'frozen', False):
+            log_path = os.path.join(os.path.dirname(sys.executable), "crash_log.txt")
+        
+        with open(log_path, "w", encoding="utf-8") as f:
+            from datetime import datetime
+            f.write(f"Aura Flow Crash Log - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"{'='*40}\n\n")
+            f.write(traceback.format_exc())
+            f.write(f"\nPython: {sys.version}\n")
+
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(0, f"Aura Flow Error:\n\n{err}\n\nCheck crash_log.txt", "Aura Flow", 0x10)
+    except:
+        pass
+    sys.exit(1)
+
+try:
+    import math
+    import random
+    import threading
+    import winreg
+    import time
+    from post_formatter import format_post
+    from aura_engine import AuraEngine
+    
+    # UI Imports
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1" # Enable back for better Win11 look
+    import keyboard
+    import sounddevice
+    import numpy
+    from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QWidget
+    from PyQt6.QtCore import Qt, QTimer, QRectF
+    from PyQt6.QtGui import (
+        QColor, QIcon, QAction, QPainter, QBrush, QPixmap,
+        QFont, QPen, QLinearGradient, QPainterPath
+    )
+except Exception as e:
+    show_error(e)
 
 # ──────────────────────────────────────────────────────────
-# 1. Load AI model BEFORE Qt (DLL conflict workaround)
+# 1. Initialize Engine
 # ──────────────────────────────────────────────────────────
-from aura_engine import AuraEngine
-
-print("[Aura Flow] Loading AI model...")
-engine = AuraEngine()
-engine.load_model()
-print("[Aura Flow] Model ready!\n")
-
-# ──────────────────────────────────────────────────────────
-# 2. Import Qt & UI modules
-# ──────────────────────────────────────────────────────────
-os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
-
-import keyboard
-import pyautogui
-from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QWidget
-from PyQt6.QtCore import Qt, QTimer, QRectF
-from PyQt6.QtGui import (
-    QColor, QIcon, QAction, QPainter, QBrush, QPixmap,
-    QFont, QPen, QLinearGradient, QPainterPath
-)
+try:
+    print("[Aura Flow] Loading AI model...")
+    engine = AuraEngine()
+    engine.load_model()
+    print("[Aura Flow] Model ready!\n")
+except Exception as e:
+    show_error(e)
 
 
 # ── Animated Wispr-style Indicator ────────────────────────

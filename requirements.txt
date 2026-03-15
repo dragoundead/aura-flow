@@ -1,6 +1,5 @@
 faster-whisper
 keyboard
 PyQt6
-pyautogui
 sounddevice
 numpy

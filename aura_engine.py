@@ -14,15 +14,33 @@ class AuraEngine:
         self.audio_data = []
         self.sample_rate = 16000
         self.history_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.json")
+        # Optimization: Determine number of threads (Ryzen 7 7700 has 16 threads)
+        self.threads = os.cpu_count() or 4
 
     def load_model(self):
         if self.model is None:
-            # Use large-v3 (NOT distil) — distil can only output English
-            # large-v3 supports 99 languages including Russian
             model_name = "large-v3"
-            print(f"Loading Whisper model: {model_name}...")
-            self.model = WhisperModel(model_name, device="cpu", compute_type=self.compute_type)
-            print("Model loaded successfully.")
+            
+            # Check for CUDA (NVIDIA GPU) using ctranslate2 directly to avoid torch dependency
+            import ctranslate2
+            try:
+                device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
+            except:
+                device = "cpu"
+            
+            # For Ryzen 7 7700 (Zen 4), int8 is very efficient on CPU.
+            # If CUDA is available, we use float16 for massive speedup.
+            ct = "float16" if device == "cuda" else "int8"
+            
+            print(f"Loading Whisper model: {model_name} on {device} ({ct})...")
+            self.model = WhisperModel(
+                model_name, 
+                device=device, 
+                compute_type=ct, 
+                cpu_threads=self.threads,
+                num_workers=2 # Parallel segments
+            )
+            print(f"Model loaded successfully with {self.threads} threads.")
 
     def start_recording(self):
         self.is_recording = True
@@ -67,20 +85,19 @@ class AuraEngine:
 
         try:
             if task == "transcribe":
-                # Russian transcription — large-v3 outputs real Russian text
                 segments, info = self.model.transcribe(
                     audio_float, 
                     task="transcribe", 
                     language="ru",
-                    beam_size=5,
-                    vad_filter=True
+                    beam_size=1, # Greedy search: 3x faster than beam_size=5
+                    vad_filter=True,
+                    initial_prompt="Разговорная русская речь."
                 )
             else:
-                # Translation: Russian speech → English text
                 segments, info = self.model.transcribe(
                     audio_float, 
                     task="translate", 
-                    beam_size=5,
+                    beam_size=1, # Greedy search for speed
                     vad_filter=True
                 )
             

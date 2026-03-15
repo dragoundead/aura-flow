@@ -1,0 +1,12 @@
+Aura Flow Crash Log - 2026-03-14 12:37:54
+========================================
+
+Traceback (most recent call last):
+  File "D:\PROJECTS\AURA WISP\main.py", line 55, in <module>
+    engine.load_model()
+    ~~~~~~~~~~~~~~~~~^^
+  File "D:\PROJECTS\AURA WISP\aura_engine.py", line 25, in load_model
+    import torch
+ModuleNotFoundError: No module named 'torch'
+
+Python: 3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]

@@ -6,8 +6,6 @@ dist/
 build/
 *.spec
 *.egg
-
-# Virtual environment
 .venv/
 venv/
 env/
@@ -16,15 +14,35 @@ env/
 .vscode/
 .idea/
 *.code-workspace
+.vs/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.filters
 
 # App data
 history.json
+history_*.json
+
+# Models (Large binaries)
+*.bin
+*.pt
+aura-flow-cpp/models/
+
+# CMake and C++ Build
+out/
+build/
+bin/
+*.exe
+*.dll
+*.pdb
+*.obj
+*.log
+aura-flow-cpp/aura-flow-cpp_autogen/
 
 # OS
 Thumbs.db
 Desktop.ini
 .DS_Store
-
-# HuggingFace cache (models are downloaded on first run)
-*.bin
-*.pt
+.directory
