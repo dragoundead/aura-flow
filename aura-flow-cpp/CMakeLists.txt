@@ -86,7 +86,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     GGML_USE_CPU
 )
 
-# TEMPORARILY DISABLED for debugging (shows console window)
-# set_target_properties(${PROJECT_NAME} PROPERTIES
-#     WIN32_EXECUTABLE TRUE
-# )
+# Set Windows subsystem for no console in Release
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    WIN32_EXECUTABLE TRUE
+) 

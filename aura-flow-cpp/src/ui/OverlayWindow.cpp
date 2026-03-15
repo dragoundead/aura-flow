@@ -46,6 +46,16 @@ void OverlayWindow::showProcessing() {
     raise();
 }
 
+void OverlayWindow::showLaunching(const QString& label) {
+    m_mode = "processing"; // Reuse processing dots for launching
+    m_label = label;
+    m_color = QColor("#4B9AFF");
+    m_animTimer.start(40);
+    show();
+    raise();
+    QApplication::processEvents(); // Force show immediately
+}
+
 void OverlayWindow::hideIndicator() {
     m_mode = "idle";
     m_animTimer.stop();

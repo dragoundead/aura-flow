@@ -28,10 +28,10 @@ void SystemTray::createMenu() {
     QMenu *modeMenu = m_menu->addMenu("Mode");
     m_translateAct = new QAction("Translate to English", this);
     m_translateAct->setCheckable(true);
-    m_translateAct->setChecked(true);
 
     m_transcribeAct = new QAction("Transcribe (Original)", this);
     m_transcribeAct->setCheckable(true);
+    m_transcribeAct->setChecked(true); // Default to Transcribe
 
     m_postAct = new QAction("📝 Post for Telegram", this);
     m_postAct->setCheckable(true);
@@ -59,6 +59,14 @@ void SystemTray::createMenu() {
 
 void SystemTray::setModeCallbacks(std::function<void(QString)> onModeChange) {
     m_onModeChange = onModeChange;
+}
+
+void SystemTray::showStartingMessage() {
+    showMessage("Aura Flow", "Запуск... Загрузка модели ИИ.", QSystemTrayIcon::Information, 2000);
+}
+
+void SystemTray::showReadyMessage() {
+    showMessage("Aura Flow", "Готов! Режим: Оригинал (RU).", QSystemTrayIcon::Information, 3000);
 }
 
 } // namespace AuraFlow

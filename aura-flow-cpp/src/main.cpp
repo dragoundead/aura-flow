@@ -31,10 +31,17 @@ int main(int argc, char *argv[]) {
     auto engine = std::make_shared<AuraEngine>();
     auto recorder = std::make_shared<AudioRecorder>();
     auto overlay = std::make_shared<OverlayWindow>();
+    
+    // Show launching indicator IMMEDIATELY
+    overlay->showLaunching("Aura Flow: Launching...");
+
     auto tray = std::make_shared<SystemTray>();
+    tray->show();
+    tray->showStartingMessage();
+    
     HotkeyManager hotkeys;
 
-    static std::string currentMode = "translate";
+    static std::string currentMode = "transcribe";
 
     // Tray logic
     tray->setModeCallbacks([](QString mode) {
@@ -139,6 +146,10 @@ int main(int argc, char *argv[]) {
 
     hotkeys.start();
     std::cout << "[Aura Flow] ✓ READY! Ctrl+Space to record." << std::endl;
+    
+    // Preparation finished, hide the launching indicator
+    overlay->hideIndicator();
+    tray->showReadyMessage();
 
     int result = app.exec();
     

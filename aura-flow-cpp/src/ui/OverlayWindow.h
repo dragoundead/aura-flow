@@ -14,6 +14,7 @@ public:
 
     Q_INVOKABLE void showRecording(const QString& label = "Recording");
     Q_INVOKABLE void showProcessing();
+    Q_INVOKABLE void showLaunching(const QString& label = "Aura Flow: Launching...");
     Q_INVOKABLE void hideIndicator();
 
 protected:

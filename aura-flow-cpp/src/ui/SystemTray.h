@@ -13,6 +13,8 @@ public:
     explicit SystemTray(QObject *parent = nullptr);
 
     void setModeCallbacks(std::function<void(QString)> onModeChange);
+    void showReadyMessage();
+    void showStartingMessage();
 
 private:
     void createMenu();
