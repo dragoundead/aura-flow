@@ -16,6 +16,9 @@ def download_with_progress(url, dest):
             sys.stdout.write(f"\r[Aura Flow] {mb_down:.1f} / {mb_total:.1f} MB ({percent:.1f}%)")
             sys.stdout.flush()
     
+    opener = urllib.request.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+    urllib.request.install_opener(opener)
     urllib.request.urlretrieve(url, dest, reporthook=progress_hook)
     print()  # newline after progress
 
@@ -27,21 +30,31 @@ def prepare_model():
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
 
-    model_path = os.path.join(models_dir, "ggml-large-v3-turbo-q8_0.bin")
-    
     print("=== Aura Flow Whisper Model Preparation ===")
+    print("Which model would you like to use?")
+    print("1) Medium (Recommended for Speed! Fast on CPU, good quality)")
+    print("2) Large-v3-Turbo (Better quality, but slower on CPU)")
+    
+    choice = input("Select option [1-2] (default 1): ").strip() or "1"
+    
+    if choice == "1":
+        model_name = "ggml-medium.bin"
+        url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin"
+        desc = "Medium (Fast CPU, Standard)"
+    else:
+        model_name = "ggml-large-v3-turbo-q8_0.bin"
+        url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q8_0.bin"
+        desc = "Large-v3-Turbo Q8_0 (Quality)"
+
+    model_path = os.path.join(models_dir, model_name)
     
     if os.path.exists(model_path):
         size_mb = os.path.getsize(model_path) / (1024 * 1024)
-        print(f"[Aura Flow] Model already exists: {model_path} ({size_mb:.1f} MB)")
+        print(f"[Aura Flow] Model déjà exists: {model_name} ({size_mb:.1f} MB)")
         print("[Aura Flow] ✓ Model ready!")
         return
     
-    # Download pre-built GGML model from Hugging Face
-    url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q8_0.bin"
-    
-    print(f"[Aura Flow] Downloading whisper large-v3-turbo q8_0 model (~800 MB)...")
-    print(f"[Aura Flow] This may take several minutes depending on your internet speed.")
+    print(f"[Aura Flow] Downloading {desc} (~500-800 MB)...")
     
     try:
         download_with_progress(url, model_path)
@@ -51,11 +64,10 @@ def prepare_model():
         print(f"  {url}")
         print(f"  Save it to: {model_path}")
         if os.path.exists(model_path):
-            os.remove(model_path)  # Remove partial download
+            os.remove(model_path)
         sys.exit(1)
     
-    size_mb = os.path.getsize(model_path) / (1024 * 1024)
-    print(f"\n[Aura Flow] ✓ Model ready! ({size_mb:.1f} MB)")
+    print(f"\n[Aura Flow] ✓ Model ready!")
     print(f"[Aura Flow] Location: {model_path}")
 
 if __name__ == "__main__":

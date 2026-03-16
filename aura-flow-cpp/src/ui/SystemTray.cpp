@@ -55,10 +55,29 @@ void SystemTray::createMenu() {
     connect(m_exitAct, &QAction::triggered, qApp, &QApplication::quit);
 
     setContextMenu(m_menu);
+
+    m_modelMenu = m_menu->addMenu("Models");
+    m_modelGroup = new QActionGroup(this);
+    m_modelGroup->setExclusive(true);
 }
 
 void SystemTray::setModeCallbacks(std::function<void(QString)> onModeChange) {
     m_onModeChange = onModeChange;
+}
+
+void SystemTray::setModelCallback(std::function<void(QString)> onModelChange) {
+    m_onModelChange = onModelChange;
+}
+
+void SystemTray::addModelOption(const QString& name, bool checked) {
+    QAction *act = m_modelMenu->addAction(name);
+    act->setCheckable(true);
+    act->setChecked(checked);
+    m_modelGroup->addAction(act);
+    
+    connect(act, &QAction::triggered, [this, name]() {
+        if (m_onModelChange) m_onModelChange(name);
+    });
 }
 
 void SystemTray::showStartingMessage() {

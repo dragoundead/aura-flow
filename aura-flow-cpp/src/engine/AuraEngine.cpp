@@ -6,8 +6,12 @@ namespace AuraFlow {
 
 AuraEngine::AuraEngine() {
     // Default parameters for whisper.cpp
+    // Default parameters for whisper.cpp optimized for speed
     m_wparams = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-    m_wparams.n_threads = std::max(1, (int)std::thread::hardware_concurrency() - 1);
+    m_wparams.n_threads = std::max(1, (int)std::thread::hardware_concurrency());
+    m_wparams.greedy.best_of = 1;
+    m_wparams.beam_search.beam_size = 1;
+    m_wparams.no_context = true; // Faster, ignores previous context
     m_wparams.print_special = false;
     m_wparams.print_progress = false;
     m_wparams.print_realtime = false;
@@ -23,6 +27,12 @@ AuraEngine::~AuraEngine() {
 }
 
 bool AuraEngine::loadModel(const std::string& modelPath, bool useGpu) {
+    if (m_ctx) {
+        whisper_free(m_ctx);
+        m_ctx = nullptr;
+    }
+    m_isLoaded = false;
+
     whisper_context_params cparams = whisper_context_default_params();
     cparams.use_gpu = false; // Force CPU - AMD GPU causes hangs with DirectML
 

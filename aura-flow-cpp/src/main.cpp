@@ -106,48 +106,57 @@ int main(int argc, char *argv[]) {
     );
 
     // Build model paths relative to the exe directory
-    // Relative to out/build/x64-Release/, models are at ../../../models/
     std::filesystem::path modelsBase = exeDir / ".." / ".." / ".." / "models";
-    
-    // Try current dir first, then parent-relative
-    std::vector<std::string> modelPaths = {
-        (modelsBase / "ggml-large-v3-turbo-q8_0.bin").string(),
-        "models/ggml-large-v3-turbo-q8_0.bin",
-        "ggml-large-v3-turbo-q8_0.bin"
-    };
-
-    bool modelLoaded = false;
-    for (const auto& p : modelPaths) {
-        std::cout << "[Aura Flow] Checking for model at: " << p << std::endl;
-        if (engine->loadModel(p, false)) {
-            modelLoaded = true;
-            break;
-        }
+    if (!std::filesystem::exists(modelsBase)) {
+        modelsBase = exeDir / "models";
     }
-    
-    if (!modelLoaded) {
-        std::cerr << "[Aura Flow] ERROR: Default models not found. Will try any .bin in models/" << std::endl;
-        // Fallback: list models dir and try first bin
-        if (std::filesystem::exists(modelsBase)) {
-            for (const auto& entry : std::filesystem::directory_iterator(modelsBase)) {
-                if (entry.path().extension() == ".bin") {
+
+    // Model selection logic
+    tray->setModelCallback([engine, overlay, modelsBase](QString modelName) {
+        if (engine->isBusy()) return;
+        
+        std::filesystem::path fullPath = modelsBase / modelName.toStdString();
+        std::cout << "[Aura Flow] Switching to model: " << fullPath.string() << std::endl;
+        
+        QMetaObject::invokeMethod(overlay.get(), "showLaunching", Qt::QueuedConnection, Q_ARG(QString, "Switching Model..."));
+        
+        std::thread([engine, overlay, fullPath]() {
+            if (engine->loadModel(fullPath.string(), false)) {
+                std::cout << "[Aura Flow] Model switch success!" << std::endl;
+            }
+            QMetaObject::invokeMethod(overlay.get(), "hideIndicator", Qt::QueuedConnection);
+        }).detach();
+    });
+
+    // Initial scan and load
+    std::string defaultModel = "ggml-medium-q5_k.bin";
+    bool modelLoaded = false;
+
+    if (std::filesystem::exists(modelsBase)) {
+        for (const auto& entry : std::filesystem::directory_iterator(modelsBase)) {
+            if (entry.path().extension() == ".bin") {
+                std::string filename = entry.path().filename().string();
+                bool isDefault = (filename == defaultModel);
+                
+                if (!modelLoaded && (isDefault || !std::filesystem::exists(modelsBase / defaultModel))) {
                     if (engine->loadModel(entry.path().string(), false)) {
                         modelLoaded = true;
-                        break;
+                        tray->addModelOption(QString::fromStdString(filename), true);
+                        continue;
                     }
                 }
+                tray->addModelOption(QString::fromStdString(filename), false);
             }
         }
     }
 
     if (!modelLoaded) {
-        std::cerr << "[Aura Flow] CRITICAL ERROR: No model loaded! Transcription will fail." << std::endl;
+        std::cerr << "[Aura Flow] CRITICAL ERROR: No model loaded!" << std::endl;
     }
 
     hotkeys.start();
     std::cout << "[Aura Flow] ✓ READY! Ctrl+Space to record." << std::endl;
     
-    // Preparation finished, hide the launching indicator
     overlay->hideIndicator();
     tray->showReadyMessage();
 

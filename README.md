@@ -16,6 +16,8 @@ We've migrated the core engine to **C++** using `whisper.cpp`.
 - 📉 **Lower** memory usage.
 - ⚡ **AVX2 & OpenMP** optimized for CPU inference (no GPU required).
 - 🎨 **Smoother UI** with Qt 6.
+- 🔄 **Hot-reloading** models via System Tray.
+- 📦 **Portable Release** — works without any local dependencies.
 
 ---
 
@@ -81,6 +83,10 @@ python main.py
 - Windows 10/11
 - 8+ GB RAM (16+ recommended for large models)
 - CPU with AVX2 support (most modern CPUs since 2013)
+
+## 📖 Documentation
+- [Developer Guide (Architecture & Internals)](DEVELOPMENT.md)
+- [C++ Build Guide (For Devs)](aura-flow-cpp/BUILD_RU.md)
 
 ## 📄 License
 
