@@ -34,9 +34,13 @@ bool AuraEngine::loadModel(const std::string& modelPath, bool useGpu) {
     m_isLoaded = false;
 
     whisper_context_params cparams = whisper_context_default_params();
-    cparams.use_gpu = false; // Force CPU - AMD GPU causes hangs with DirectML
-
-    std::cout << "[AuraEngine] Loading model: " << modelPath << " (CPU mode)" << std::endl;
+    cparams.use_gpu = useGpu; // Respect useGpu flag for CUDA/DirectML
+    if (useGpu) {
+        cparams.gpu_device = 0; // Use default GPU
+        std::cout << "[AuraEngine] Loading model: " << modelPath << " (GPU enabled)" << std::endl;
+    } else {
+        std::cout << "[AuraEngine] Loading model: " << modelPath << " (CPU mode)" << std::endl;
+    }
 
     m_ctx = whisper_init_from_file_with_params(modelPath.c_str(), cparams);
     if (!m_ctx) {

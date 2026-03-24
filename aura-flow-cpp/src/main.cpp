@@ -42,12 +42,31 @@ int main(int argc, char *argv[]) {
     HotkeyManager hotkeys;
 
     static std::string currentMode = "transcribe";
+    static std::string currentModelFullPath = "";
+    static bool useGpu = false; // No NVIDIA GPU on this system (AMD Ryzen 7 7700)
 
     // Tray logic
     tray->setModeCallbacks([](QString mode) {
         currentMode = mode.toStdString();
         std::cout << "[Aura Flow] Mode: " << currentMode << std::endl;
     });
+
+    tray->setHardwareCallback([engine, overlay](QString hw) {
+        if (engine->isBusy()) return;
+        useGpu = (hw == "GPU");
+        std::cout << "[Aura Flow] Hardware switched to: " << hw.toStdString() << std::endl;
+        
+        if (!currentModelFullPath.empty()) {
+            QMetaObject::invokeMethod(overlay.get(), "showLaunching", Qt::QueuedConnection, Q_ARG(QString, "Switching Hardware..."));
+            std::thread([engine, overlay]() {
+                if (engine->loadModel(currentModelFullPath, useGpu)) {
+                    std::cout << "[Aura Flow] Hardware switch success!" << std::endl;
+                }
+                QMetaObject::invokeMethod(overlay.get(), "hideIndicator", Qt::QueuedConnection);
+            }).detach();
+        }
+    });
+
     tray->show();
 
     // Hotkey logic
@@ -115,13 +134,13 @@ int main(int argc, char *argv[]) {
     tray->setModelCallback([engine, overlay, modelsBase](QString modelName) {
         if (engine->isBusy()) return;
         
-        std::filesystem::path fullPath = modelsBase / modelName.toStdString();
-        std::cout << "[Aura Flow] Switching to model: " << fullPath.string() << std::endl;
+        currentModelFullPath = (modelsBase / modelName.toStdString()).string();
+        std::cout << "[Aura Flow] Switching to model: " << currentModelFullPath << std::endl;
         
         QMetaObject::invokeMethod(overlay.get(), "showLaunching", Qt::QueuedConnection, Q_ARG(QString, "Switching Model..."));
         
-        std::thread([engine, overlay, fullPath]() {
-            if (engine->loadModel(fullPath.string(), false)) {
+        std::thread([engine, overlay]() {
+            if (engine->loadModel(currentModelFullPath, useGpu)) {
                 std::cout << "[Aura Flow] Model switch success!" << std::endl;
             }
             QMetaObject::invokeMethod(overlay.get(), "hideIndicator", Qt::QueuedConnection);
@@ -139,7 +158,8 @@ int main(int argc, char *argv[]) {
                 bool isDefault = (filename == defaultModel);
                 
                 if (!modelLoaded && (isDefault || !std::filesystem::exists(modelsBase / defaultModel))) {
-                    if (engine->loadModel(entry.path().string(), false)) {
+                    currentModelFullPath = entry.path().string();
+                    if (engine->loadModel(currentModelFullPath, useGpu)) {
                         modelLoaded = true;
                         tray->addModelOption(QString::fromStdString(filename), true);
                         continue;

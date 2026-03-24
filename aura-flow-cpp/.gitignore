@@ -1,0 +1,33 @@
+# C++ / Qt6 / whisper.cpp
+/.vs/
+/out/
+/build/
+/CMakeSettings.json
+/CMakeUserPresets.json
+
+# Audio / Models
+/models/*.bin
+!/models/.gitkeep
+
+# 3rdparty (keep as submodules or subfolders, but usually whisper.cpp is large)
+# If the user wants to keep 3rdparty in git (easier for beginners), we skip this.
+# But whisper.cpp has its own .git, so it will be a submodule if we are not careful.
+# Let's ignore its .git to keep it as a simple folder.
+3rdparty/whisper.cpp/.git
+
+# Qt Deployed Files (from windeployqt)
+*.dll
+*.qm
+/platforms/
+/styles/
+/imageformats/
+/iconengines/
+/networkinformation/
+/tls/
+/translations/
+/generic/
+
+# OS specific
+Thumbs.db
+Desktop.ini
+.DS_Store

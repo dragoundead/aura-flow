@@ -14,6 +14,7 @@ public:
 
     void setModeCallbacks(std::function<void(QString)> onModeChange);
     void setModelCallback(std::function<void(QString)> onModelChange);
+    void setHardwareCallback(std::function<void(QString)> onHardwareChange);
     void addModelOption(const QString& name, bool checked = false);
     void showReadyMessage();
     void showStartingMessage();
@@ -30,8 +31,15 @@ private:
 
     QMenu *m_modelMenu;
     QActionGroup *m_modelGroup;
+    
+    QMenu *m_hwMenu;
+    QActionGroup *m_hwGroup;
+    QAction *m_hwGpuAct;
+    QAction *m_hwCpuAct;
+
     std::function<void(QString)> m_onModeChange;
     std::function<void(QString)> m_onModelChange;
+    std::function<void(QString)> m_onHardwareChange;
 };
 
 } // namespace AuraFlow

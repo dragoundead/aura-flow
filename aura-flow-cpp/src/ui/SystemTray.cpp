@@ -59,6 +59,27 @@ void SystemTray::createMenu() {
     m_modelMenu = m_menu->addMenu("Models");
     m_modelGroup = new QActionGroup(this);
     m_modelGroup->setExclusive(true);
+
+    m_menu->addSeparator();
+
+    m_hwMenu = m_menu->addMenu("Hardware");
+    m_hwGpuAct = new QAction("GPU (NVIDIA)", this);
+    m_hwGpuAct->setCheckable(true);
+    m_hwGpuAct->setChecked(true); // Default GPU
+
+    m_hwCpuAct = new QAction("CPU", this);
+    m_hwCpuAct->setCheckable(true);
+
+    m_hwGroup = new QActionGroup(this);
+    m_hwGroup->addAction(m_hwGpuAct);
+    m_hwGroup->addAction(m_hwCpuAct);
+    m_hwGroup->setExclusive(true);
+
+    m_hwMenu->addAction(m_hwGpuAct);
+    m_hwMenu->addAction(m_hwCpuAct);
+
+    connect(m_hwGpuAct, &QAction::triggered, [this]() { if (m_onHardwareChange) m_onHardwareChange("GPU"); });
+    connect(m_hwCpuAct, &QAction::triggered, [this]() { if (m_onHardwareChange) m_onHardwareChange("CPU"); });
 }
 
 void SystemTray::setModeCallbacks(std::function<void(QString)> onModeChange) {
@@ -67,6 +88,10 @@ void SystemTray::setModeCallbacks(std::function<void(QString)> onModeChange) {
 
 void SystemTray::setModelCallback(std::function<void(QString)> onModelChange) {
     m_onModelChange = onModelChange;
+}
+
+void SystemTray::setHardwareCallback(std::function<void(QString)> onHardwareChange) {
+    m_onHardwareChange = onHardwareChange;
 }
 
 void SystemTray::addModelOption(const QString& name, bool checked) {

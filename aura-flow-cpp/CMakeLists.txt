@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ── CPU Optimizations ─────────────────────────────────────
 # Enable AVX2 for faster math operations (critical for whisper.cpp performance)
 if(MSVC)
-    add_compile_options(/arch:AVX2 /fp:fast /openmp)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2 /fp:fast /openmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /fp:fast /openmp")
 endif()
 
 # ── Qt 6.5 Configuration ──────────────────────────────────
@@ -15,14 +16,37 @@ endif()
 find_package(Qt6 6.5 COMPONENTS Widgets REQUIRED)
 qt_standard_project_setup()
 
-# ── whisper.cpp with DirectML ─────────────────────────────
-# We assume whisper.cpp is in 3rdparty/whisper.cpp
-option(WHISPER_DIRECTML "Use DirectML for AMD GPU acceleration" ON)
+# ── whisper.cpp with CUDA or DirectML ─────────────────────
+option(WHISPER_CUDA "Use CUDA for NVIDIA GPU acceleration" OFF)
+option(WHISPER_DIRECTML "Use DirectML for AMD GPU acceleration" OFF)
 
-if(WHISPER_DIRECTML)
+if(WHISPER_CUDA)
+    enable_language(CUDA)
+    add_definitions(-DGGML_USE_CUDA)
+    
+    # Force NVCC to use our detected C++ compiler
+    if(MSVC)
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -ccbin \"${CMAKE_CXX_COMPILER}\" -Xcompiler=/Zc:preprocessor")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Zc:preprocessor")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor")
+    endif()
+
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -extended-lambda")
+    
+    find_package(CUDAToolkit REQUIRED)
+    file(GLOB_RECURSE WHISPER_CUDA_SOURCES 
+        "3rdparty/whisper.cpp/ggml/src/ggml-cuda/*.cu" 
+        "3rdparty/whisper.cpp/ggml/src/ggml-cuda/*.cpp"
+        "3rdparty/whisper.cpp/ggml/src/ggml-cuda.cu"
+        "3rdparty/whisper.cpp/ggml/src/ggml-cuda.cpp"
+    )
+    # MSVC's INFINITY macro evaluates to 1e+300, which NVCC thinks overflows float bounds and throws an error/warning 221.
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -diag-suppress 221")
+    set(GPU_LIBS CUDA::cudart CUDA::cublas CUDA::cublasLt CUDA::cuda_driver)
+elseif(WHISPER_DIRECTML)
     add_definitions(-DWHISPER_DIRECTML)
     # Link against Windows DirectML/D3D12
-    set(DIRECTML_LIBS "D3D12.lib" "DirectML.lib" "dxgi.lib")
+    set(GPU_LIBS "D3D12.lib" "DirectML.lib" "dxgi.lib")
 endif()
 
 # ── Include Directories ──────────────────────────────────
@@ -71,11 +95,12 @@ set(WHISPER_SOURCES
 qt_add_executable(${PROJECT_NAME} 
     ${SOURCES}
     ${WHISPER_SOURCES}
+    ${WHISPER_CUDA_SOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     Qt6::Widgets
-    ${DIRECTML_LIBS}
+    ${GPU_LIBS}
 )
 
 # Define WHISPER and GGML versions
@@ -83,8 +108,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     WHISPER_VERSION="1.8.3"
     GGML_VERSION="1.0.0"
     GGML_COMMIT="unknown"
-    GGML_USE_CPU
 )
+
+if(NOT WHISPER_CUDA AND NOT WHISPER_DIRECTML)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE GGML_USE_CPU)
+endif()
 
 # Set Windows subsystem for no console in Release
 set_target_properties(${PROJECT_NAME} PROPERTIES

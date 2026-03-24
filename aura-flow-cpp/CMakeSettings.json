@@ -15,6 +15,16 @@
           "name": "CMAKE_PREFIX_PATH",
           "value": "C:/Qt/6.5.3/msvc2019_64",
           "type": "PATH"
+        },
+        {
+          "name": "WHISPER_CUDA",
+          "value": "OFF",
+          "type": "BOOL"
+        },
+        {
+          "name": "WHISPER_DIRECTML",
+          "value": "OFF",
+          "type": "BOOL"
         }
       ]
     }

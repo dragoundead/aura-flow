@@ -1,16 +1,21 @@
 # 📖 Инструкция по сборке Aura Flow (C++)
 
-Эта инструкция поможет вам собрать и запустить C++ версию Aura Flow на Windows с оптимизацией под AMD (DirectML).
+Эта инструкция поможет вам собрать и запустить C++ версию Aura Flow на Windows с оптимизацией под NVIDIA GPU (CUDA) или AMD.
 
 ## 🛠 Предварительные требования
 1. **Visual Studio 2022**: Установите рабочую нагрузку «Разработка классических приложений на C++».
-2. **Qt 6.5 LTS**: Установите через "Qt Maintenance Tool" (версия MSVC 2019 64-bit).
-3. **CMake**: Убедитесь, что CMake установлен и добавлен в PATH.
+2. **CUDA Toolkit 12.x** (Обязательно для NVIDIA): Скачайте и установите с официального сайта NVIDIA.
+3. **Qt 6.5 LTS**: Установите через "Qt Maintenance Tool" (версия MSVC 2019 64-bit).
+4. **CMake**: Убедитесь, что CMake установлен и добавлен в PATH.
 
 ## 📂 Подготовка проекта
 1. Перейдите в папку `aura-flow-cpp`.
 2. Скачайте/подключите `whisper.cpp` в папку `3rdparty/`:
-   - Вы можете клонировать его: `git clone https://github.com/ggerganov/whisper.cpp 3rdparty/whisper.cpp`.
+   - В консоли выполните: 
+     ```bash
+     git clone https://github.com/ggerganov/whisper.cpp 3rdparty/whisper.cpp
+     ```
+   *(Если папка 3rdparty/whisper.cpp пуста, обязательно клонируйте ее снова!)*
 3. Подготовьте модель:
    - Скрипт для конвертации: `3rdparty/whisper.cpp/models/convert-pt-to-ggml.py`.
    - Конвертируйте вашу модель Whisper v3 из PyTorch в формат GGML.
@@ -24,6 +29,7 @@
 2. VS автоматически определит `CMakeLists.txt`.
 3. Убедитесь, что выбран профиль `x64-Release`.
 4. В настройках CMake (если нужно) укажите путь к Qt: `set(CMAKE_PREFIX_PATH "C:/Qt/6.5.0/msvc2019_64")`.
+   - По умолчанию CMake скомпилирует проект с **NVIDIA CUDA**, если установлен CUDA Toolkit (`WHISPER_CUDA=ON`).
 5. Нажмите **Build -> Build All**.
 
 ## 🚀 Запуск
